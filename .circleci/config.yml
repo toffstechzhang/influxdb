@@ -134,7 +134,7 @@ jobs:
       - persist_to_workspace:
           root: /
           paths:
-            - /go/src/github.com/influxdata/influxdb
+            - go/src/github.com/influxdata/influxdb
 
   deploy-nightly:
     docker:
