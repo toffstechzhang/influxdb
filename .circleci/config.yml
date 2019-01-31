@@ -7,30 +7,42 @@ jobs:
       - run: docker run --entrypoint "./run_litmus_tests_oss.sh" -e TEST_LIST=tests_lists/gateway_api_tests.list --net host -v /var/run/docker.sock:/var/run/docker.sock -v ~/project:/Litmus/result quay.io/influxdb/litmus:latest
       - store_artifacts:
           path: ~/project
-  e2e: # Integration between api and ui
+  e2e:
     docker:
-      - image: cypress/browsers
-        environment:
-          ## this enables colors in the output
-          TERM: xterm
+      - image: circleci/golang:1.11-node-browsers
+    environment:
+      GOCACHE: /tmp/go-cache
+      GOFLAGS: '-mod=readonly -p=4' # Go on Circle thinks 32 CPUs are available, but there aren't.
     working_directory: /go/src/github.com/influxdata/influxdb
     steps:
-      - attach_workspace:
-          at: /
-      # Run npm install, using Circle's cache if applicable.
-      # so, we have to add all the go stuff and nc stuff here
-      - run: apt-get install -y netcat-openbsd
+      - checkout
+
+      # Speed up `make build` by restoring caches from previous runs.
+      - restore_cache:
+          name: Restoring GOCACHE
+          keys:
+            - influxdb-gocache- # Just match the most recent Go cache.
+      - restore_cache:
+          name: Restoring GOPATH/pkg/mod
+          keys:
+            - influxdb-gomod-{{ checksum "go.sum" }} # Just match the go.sum checksum cache.
+      - restore_cache:
+          name: Restore npm package cache
+          keys:
+            - chronograf-npm-packages-{{ checksum "ui/package-lock.json" }}
+      - run: sudo apt-get install -y netcat-openbsd
+      - run: make protoc
+      - run: make build
       - run:
           command: ./bin/linux/influxd
           background: true
       - run: make e2e
       - store_test_results:
-          path: junit-results
+          path: ui/junit-results
       - store_artifacts:
-          path: cypress/videos
+          path: ui/cypress/videos
       - store_artifacts:
-          path: cypress/screenshots
-
+          path: ui/cypress/screenshots
   jstest:
     docker:
       - image: circleci/golang:1.11-node-browsers
@@ -129,13 +141,8 @@ jobs:
           name: Restore npm package cache
           keys:
             - chronograf-npm-packages-{{ checksum "ui/package-lock.json" }}
-      - run: make proto
+      - run: make protoc
       - run: make build
-      - persist_to_workspace:
-          root: /
-          paths:
-            - go/src/github.com/influxdata/influxdb
-
   deploy-nightly:
     docker:
       - image: circleci/golang:1.11-node-browsers
@@ -207,10 +214,7 @@ workflows:
       - build
   e2e:
     jobs:
-      - build
-      - e2e:
-          requires:
-            - build
+      - e2e
   nightly:
     triggers:
       - schedule:
