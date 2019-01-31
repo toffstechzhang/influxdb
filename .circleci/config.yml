@@ -16,7 +16,7 @@ jobs:
     working_directory: /go/src/github.com/influxdata/influxdb
     steps:
       - attach_workspace:
-        at: /home/circleci
+        at: /go/src/github.com/influxdata/influxdb
       # Run npm install, using Circle's cache if applicable.
       # so, we have to add all the go stuff and nc stuff here
       - run: apt-get install -y netcat-openbsd
@@ -132,9 +132,9 @@ jobs:
       - run: make proto
       - run: make build
       - persist_to_workspace:
-          root: /home/circleci
+          root: /
           paths:
-            - project
+            - /go/src/github.com/influxdata/influxdb
 
   deploy-nightly:
     docker:
