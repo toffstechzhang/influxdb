@@ -8,11 +8,10 @@ import (
 	"net/http"
 	"path"
 
-	"go.uber.org/zap"
-
 	"github.com/influxdata/influxdb"
 	icontext "github.com/influxdata/influxdb/context"
 	"github.com/julienschmidt/httprouter"
+	"go.uber.org/zap"
 )
 
 // UserBackend is all services and associated parameters required to construct
@@ -27,8 +26,7 @@ type UserBackend struct {
 
 func NewUserBackend(b *APIBackend) *UserBackend {
 	return &UserBackend{
-		Logger: b.Logger.With(zap.String("handler", "user")),
-
+		Logger:                  b.Logger.With(zap.String("handler", "user")),
 		UserService:             b.UserService,
 		UserOperationLogService: b.UserOperationLogService,
 		BasicAuthService:        b.BasicAuthService,
@@ -38,8 +36,7 @@ func NewUserBackend(b *APIBackend) *UserBackend {
 // UserHandler represents an HTTP API handler for users.
 type UserHandler struct {
 	*httprouter.Router
-	Logger *zap.Logger
-
+	Logger                  *zap.Logger
 	UserService             influxdb.UserService
 	UserOperationLogService influxdb.UserOperationLogService
 	BasicAuthService        influxdb.BasicAuthService
