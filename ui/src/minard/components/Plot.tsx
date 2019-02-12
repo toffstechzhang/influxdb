@@ -23,7 +23,7 @@ export interface Props {
   // ------------------
   //
   x?: string
-  fill?: string
+  fill?: string[]
   // y?: string
   // start?: string
   // stop?: string
@@ -73,7 +73,8 @@ export const Plot: SFC<Props> = ({
     defaults: {table, colors, aesthetics: {x, fill}, scales: {}},
   })
 
-  // TODO: When should these actions be batched?
+  // TODO: Batch these on first render
+  // TODO: Handle aesthetic prop changes
   useEffect(() => dispatch(setTable(table)), [table])
   useEffect(() => dispatch(setDimensions(width, height)), [width, height])
   useEffect(() => dispatch(setColors(colors)), [colors])
