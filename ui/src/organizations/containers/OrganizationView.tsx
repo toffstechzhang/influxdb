@@ -12,12 +12,16 @@ const getCollectors = async (org: Organization) => {
   return client.telegrafConfigs.getAllByOrg(org)
 }
 
-const getScrapers = async () => {
+const getScrapers = async (): Promise<ScraperTargetResponse[]> => {
   return await client.scrapers.getAll()
 }
 
-const getBuckets = async (org: Organization) => {
+const getBuckets = async (org: Organization): Promise<Bucket[]> => {
   return client.buckets.getAllByOrg(org)
+}
+
+const getVariables = async (org: Organization): Promise<Macro[]> => {
+  return await client.variables.getAllByOrg(org.name)
 }
 
 // Actions
@@ -49,6 +53,7 @@ import {
   ScraperTargetResponse,
 } from '@influxdata/influx'
 import * as NotificationsActions from 'src/types/actions/notifications'
+import {Macro} from '@influxdata/influx'
 
 // Decorators
 import {ErrorHandling} from 'src/shared/decorators/errors'
@@ -271,7 +276,25 @@ class OrganizationView extends PureComponent<Props> {
                 url="variables_tab"
                 title="Variables"
               >
-                <Variables />
+                <GetOrgResources<Macro[]>
+                  organization={org}
+                  fetcher={getVariables}
+                >
+                  {(variables, loading, fetch) => {
+                    return (
+                      <SpinnerContainer
+                        loading={loading}
+                        spinnerComponent={<TechnoSpinner />}
+                      >
+                        <Variables
+                          onChange={fetch}
+                          variables={variables}
+                          orgName={org.name}
+                        />
+                      </SpinnerContainer>
+                    )
+                  }}
+                </GetOrgResources>
               </TabbedPageSection>
             </OrganizationTabs>
           </div>
